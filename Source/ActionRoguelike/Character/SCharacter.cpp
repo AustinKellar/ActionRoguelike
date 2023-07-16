@@ -15,12 +15,12 @@ ASCharacter::ASCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>("SpringArmComp");
-	SpringArmComp->bUsePawnControlRotation = true;
-	SpringArmComp->SetupAttachment(RootComponent);
+	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>("SpringArmComponent");
+	SpringArmComponent->bUsePawnControlRotation = true;
+	SpringArmComponent->SetupAttachment(RootComponent);
 	
-	CameraComp = CreateDefaultSubobject<UCameraComponent>("CameraComp");
-	CameraComp->SetupAttachment(SpringArmComp);
+	CameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
+	CameraComponent->SetupAttachment(SpringArmComponent);
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;	
 	bUseControllerRotationYaw = false;
@@ -60,14 +60,17 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	PlayerInputComponent->BindAxis("MoveForward", this, &ASCharacter::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &ASCharacter::MoveRight);
+	PlayerInputComponent->BindAxis("MoveForward", this, &ASCharacter::HandleMoveForward);
+	PlayerInputComponent->BindAxis("MoveRight", this, &ASCharacter::HandleMoveRight);
 	
 	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+
+	PlayerInputComponent->BindAction("PrimaryAttack", IE_Pressed, this, &ASCharacter::HandlePrimaryAttack);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ASCharacter::HandleJump);
 }
 
-void ASCharacter::MoveForward(float Value)
+void ASCharacter::HandleMoveForward(float Value)
 {
 	FRotator ControlRotation = GetControlRotation();
 	ControlRotation.Pitch = 0.f;
@@ -76,7 +79,7 @@ void ASCharacter::MoveForward(float Value)
 	AddMovementInput(ControlRotation.Vector(), Value);
 }
 
-void ASCharacter::MoveRight(float Value)
+void ASCharacter::HandleMoveRight(float Value)
 {
 	FRotator ControlRotation = GetControlRotation();
 	ControlRotation.Pitch = 0.f;
@@ -85,3 +88,17 @@ void ASCharacter::MoveRight(float Value)
 	AddMovementInput(RightVector, Value);
 }
 
+void ASCharacter::HandlePrimaryAttack()
+{
+	const FVector HandLocation = GetMesh()->GetSocketLocation("Muzzle_01");;
+	const FTransform SpawnTransform = FTransform(GetControlRotation(), HandLocation);
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	
+	GetWorld()->SpawnActor<AActor>(PromaryAttackProjectileClass, SpawnTransform, SpawnParameters);
+}
+
+void ASCharacter::HandleJump()
+{
+	Jump();
+}

@@ -21,10 +21,13 @@ public:
 protected:
 
 	UPROPERTY(VisibleAnywhere)
-	USpringArmComponent* SpringArmComp;
+	USpringArmComponent* SpringArmComponent;
 
 	UPROPERTY(VisibleAnywhere)
-	UCameraComponent* CameraComp;
+	UCameraComponent* CameraComponent;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<AActor> PromaryAttackProjectileClass;
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -37,7 +40,9 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 private:
-	void MoveForward(float Value);
-	void MoveRight(float Value);
+	void HandleMoveForward(float Value);
+	void HandleMoveRight(float Value);
+	void HandlePrimaryAttack();
+	void HandleJump();
 
 };
